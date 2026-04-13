@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Election API Reference</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+
+        :root {
+            --bg-color: #f8fafc;
+            --sidebar-bg: #0f172a;
+            --sidebar-text: #94a3b8;
+            --sidebar-hover: #f8fafc;
+            --text-main: #334155;
+            --text-heading: #0f172a;
+            --border-color: #e2e8f0;
+            --card-bg: #ffffff;
+            
+            --get-color: #0ea5e9;
+            --get-bg: #e0f2fe;
+            --post-color: #10b981;
+            --post-bg: #d1fae5;
+            --put-color: #f59e0b;
+            --put-bg: #fef3c7;
+            --delete-color: #ef4444;
+            --delete-bg: #fee2e2;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background-color: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            height: 100vh;
+            position: fixed;
+            overflow-y: auto;
+            padding: 24px 0;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+        .sidebar-header {
+            padding: 0 24px 24px 24px;
+            border-bottom: 1px solid #1e293b;
+            margin-bottom: 24px;
+        }
+
+        .sidebar-header h1 {
+            color: #fff;
+            font-size: 1.25rem;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .nav-group { margin-bottom: 24px; }
+        .nav-group-title {
+            padding: 0 24px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #64748b;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 8px 24px;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            color: var(--sidebar-hover);
+            background-color: #1e293b;
+        }
+
+        .nav-method {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.7rem;
+            font-weight: 600;
+            width: 45px;
+            margin-right: 12px;
+        }
+        
+        .nav-method.get { color: #38bdf8; }
+        .nav-method.post { color: #34d399; }
+        .nav-method.put { color: #fbbf24; }
+        .nav-method.delete { color: #f87171; }
+
+        /* Main Content */
+        .content {
+            margin-left: 280px;
+            padding: 48px;
+            width: calc(100% - 280px);
+            max-width: 1200px;
+        }
+
+        .header-section { margin-bottom: 48px; }
+        .header-section h2 {
+            font-size: 2.25rem;
+            color: var(--text-heading);
+            margin: 0 0 16px 0;
+        }
+
+        .base-url {
+            background: #e2e8f0;
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.875rem;
+            color: #0f172a;
+            display: inline-block;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: var(--text-heading);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 12px;
+            margin: 48px 0 24px 0;
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+        }
+        
+        .section-base {
+            font-size: 1rem;
+            color: #64748b;
+            font-family: 'Fira Code', monospace;
+            font-weight: normal;
+        }
+
+        /* Endpoints */
+        .endpoint {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 32px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .endpoint-header {
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            background: #f8fafc;
+        }
+
+        .badge {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 0.875rem;
+            padding: 6px 12px;
+            border-radius: 4px;
+            margin-right: 16px;
+            text-transform: uppercase;
+        }
+
+        .badge.get { background: var(--get-bg); color: var(--get-color); border: 1px solid #bae6fd; }
+        .badge.post { background: var(--post-bg); color: var(--post-color); border: 1px solid #a7f3d0; }
+        .badge.put { background: var(--put-bg); color: var(--put-color); border: 1px solid #fde68a; }
+        .badge.delete { background: var(--delete-bg); color: var(--delete-color); border: 1px solid #fecaca; }
+
+        .path {
+            font-family: 'Fira Code', monospace;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--text-heading);
+        }
+
+        .endpoint-body {
+            padding: 24px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 32px;
+        }
+
+        .data-column {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .data-column h4 {
+            margin: 0 0 12px 0;
+            font-size: 0.875rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 16px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            margin: 0;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .empty-state {
+            color: #94a3b8;
+            font-style: italic;
+            font-size: 0.875rem;
+        }
+
+        .dev-notice {
+            background-color: #fffbeb;
+            color: #b45309;
+            border: 1px solid #fde68a;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 32px;
+            font-weight: 500;
+        }
+
+        @media (max-width: 1024px) {
+            .endpoint-body { flex-direction: column; gap: 24px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h1>Online Election API</h1>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-group-title">Admin</div>
+            <a href="#admin-register" class="nav-link"><span class="nav-method post">POST</span> /register</a>
+            <a href="#admin-view" class="nav-link"><span class="nav-method get">GET</span> /view</a>
+            <a href="#admin-view-ph" class="nav-link"><span class="nav-method get">GET</span> /view/ph/{ph_no}</a>
+            <a href="#admin-login" class="nav-link"><span class="nav-method post">POST</span> /login</a>
+            <a href="#admin-logout" class="nav-link"><span class="nav-method post">POST</span> /logout</a>
+            <a href="#admin-get-cand" class="nav-link"><span class="nav-method get">GET</span> /get/candidate/...</a>
+            <a href="#admin-get-voter" class="nav-link"><span class="nav-method get">GET</span> /get/voter/...</a>
+            <a href="#admin-all" class="nav-link"><span class="nav-method get">GET</span> /all</a>
+            <a href="#admin-delete" class="nav-link"><span class="nav-method delete">DEL</span> /delete/{admin_id}</a>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-group-title">Voter</div>
+            <a href="#voter-login" class="nav-link"><span class="nav-method post">POST</span> /login</a>
+            <a href="#voter-logout" class="nav-link"><span class="nav-method post">POST</span> /logout</a>
+            <a href="#voter-profile" class="nav-link"><span class="nav-method get">GET</span> /profile</a>
+            <a href="#voter-profile-ph" class="nav-link"><span class="nav-method get">GET</span> /profile/ph/{ph_no}</a>
+            <a href="#voter-register" class="nav-link"><span class="nav-method post">POST</span> /register</a>
+            <a href="#voter-election" class="nav-link"><span class="nav-method get">GET</span> /election-details/...</a>
+            <a href="#voter-cand-list" class="nav-link"><span class="nav-method get">GET</span> /candidate-list</a>
+            <a href="#voter-phone" class="nav-link"><span class="nav-method get">GET</span> /phone-number</a>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-group-title">Election</div>
+            <a href="#election-create" class="nav-link"><span class="nav-method post">POST</span> /create</a>
+            <a href="#election-modify" class="nav-link"><span class="nav-method put">PUT</span> /modify</a>
+            <a href="#election-view" class="nav-link"><span class="nav-method get">GET</span> /view/{elec_id}</a>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-group-title">Party</div>
+            <a href="#party-add" class="nav-link"><span class="nav-method post">POST</span> /add</a>
+            <a href="#party-view" class="nav-link"><span class="nav-method post">POST</span> /view/{party_id}</a>
+            <a href="#party-update" class="nav-link"><span class="nav-method post">POST</span> /update</a>
+            <a href="#party-delete" class="nav-link"><span class="nav-method delete">DEL</span> /delete/{party_id}</a>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-group-title">Candidate</div>
+            <a href="#candidate-add" class="nav-link"><span class="nav-method post">POST</span> /add</a>
+            <a href="#candidate-view" class="nav-link"><span class="nav-method get">GET</span> /view/{cand_id}</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+        <div class="header-section">
+            <h2>API Reference</h2>
+            <p>Complete documentation for the Online Election system APIs.</p>
+            <div class="base-url"><strong>Base URL:</strong> {IP_ADDRESS}:{PORT}/v2/online-election</div>
+        </div>
+
+        <!-- ================= ADMIN SECTION ================= -->
+        <h3 class="section-title" id="admin-section">Admin APIs <span class="section-base">Base: /admin</span></h3>
+
+        <div class="endpoint" id="admin-register">
+            <div class="endpoint-header">
+                <span class="badge post">POST</span>
+                <span class="path">/admin/register</span>
+            </div>
+            <div class="endpoint-body">
+                <div class="data-column">
+                    <h4>Request Body</h4>
+<pre>{
+  "admin_name": "STRING",
+  "admin_password": "STRING",
+  "admin_address": "STRING",
+  "admin_phone": "STRING"
+}</pre>
+                </div>
+                <div class="data-column">
+                    <h4>Response</h4>
+<pre>{
+  "admin_id": "STRING"
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint" id="admin-view">
+            <div class="endpoint-header">
+                <span class="badge get">GET</span>
+                <span class="path">/admin/view</span>
+            </div>
+            <div class="endpoint-body">
+                <div class="data-column">
+                    <h4>Request Data</h4>
+<pre>{
+  "admin_id": "id will be fetched from session"
+}</pre>
+                </div>
+                <div class="data-column">
+                    <h4>Response</h4>
+<pre>{
+  "id": "STRING",
+  "name": "STRING",
+  "address": "STRING",
+  "phone": "STRING"
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint" id="admin-view-ph">
+            <div class="endpoint-header">
+                <span class="badge get">GET</span>
+                <span class="path">/admin/view/ph/{ph_no}</span>
+            </div>
+            <div class="endpoint-body">
+                <div class="data-column">
+                    <h4>Path Variables</h4>
+<pre>ph_no: "string"</pre>
+                </div>
+                <div class="data-column">
+                    <h4>Response</h4>
+<pre>{
+  "id": "STRING",
+  "name": "STRING",
+  "address": "STRING",
+  "phone": "STRING"
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint" id="admin-login">
+            <div class="endpoint-header">
+                <span class="badge post">POST</span>
+                <span class="path">/admin/login/{id}/{password}</span>
+            </div>
+            <div class="endpoint-body">
+                <div class="data-column">
+                    <h4>Path Variables / Request</h4>
+<pre>id: "string"
+password: "string"</pre>
+                </div>
+                <div class="data-column">
+                    <h4>Response</h4>
+<pre>{
+  "string": "Login Succeed" // or "Login Failed"
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint" id="admin-logout">
+            <div class="endpoint-header">
+                <span class="badge post">POST</span>
+                <span class="path">/admin/logout</span>
+            </div>
+            <div class="endpoint-body">
+                <div class="data-column">
+                    <h4>Request Data</h4>
+<pre>{
+  "admin_id": "will be fetched from session"
+}</pre>
+                </div>
+                <div class="data-column">
+                    <h4>Response</h4>
+<pre>{
+  "string": "Logout Succeed" // or "Logout failed"
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint" id="admin-get-cand">
+            <div class="endpoint-header">
+                <span class="badge get">GET</span>
+                <span class="path">/admin/get/candidate/constituency/{constituency_id}</span>
+            </div>
+            <div class="endpoint-body">
+                <div class="data-column">
+                    <h4>Path Variables</h4>
+<pre>constituency_id: "string"</pre>
+                </div>
+                <div class="data-column">
+                    <h4>Response</h4>
+<pre>[
+  {
+    "cand_id": "string",
+    "cand_name": "string",
+    "cand_address": "string",
+    "cand_phone": "string",
+    "cand_dob": "string",
+    "party_name": "string",
+    "constituency_id": "string",
+    "constituency_name": "string",
+    "election_type": "string",
+    "election_date": "string"
+  }
+]</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint" id="admin-get-voter">
+            <div class="endpoint-header">
+                <span class="badge get">GET</span>
+                <span class="path">/admin/get/voter/constituency/{constituency_id}</span>
+            </div>
+            <div class="endpoint-body">
+                <div class="data-column">
+                    <h4>Path Variables</h4>
+<pre>constituency_id: "string"</pre>
+                </div>
+                <div class="data-column">
+                    <h4>Response</h4>
+<pre>[
+  {
+    "epic_id": "string",
+    "name": "string",
+    "dob": "string",
+    "phoneNumber": "string",
+    "active": "string",
+    "address": "string",
+    "role": "string",
+    "vote_id": "string",
+    "constituency": "string"
+  }
+]</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint" id="admin-all">
+            <div class="endpoint-header">
+                <span class="badge get">GET</span>
+                <span class="path">/admin/all</span>
+            </div>
+            <div class="endpoint-body">
+                <div class="data-column">
+                    <h4>Request</h4>
+                    <div class="empty-state">No parameters required</div>
+                </div>
+                <div class="data-column">
+                    <h4>Response</h4>
+<pre>[
+  {
+    "id": "STRING",
+    "name": "STRING",
+    "address": "STRING",
+    "phone": "STRING"
+  }
+]</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint" id="admin-delete">
+            <div class="endpoint-header">
+                <span class="badge delete">DELETE</span>
+                <span class="path">/admin/delete/{admin_id}</span>
+            </div>
+            <div class="endpoint-body">
+                <div class="data-column">
+                    <h4>Path Variables</h4>
+<pre>admin_id: "string"</pre>
+                </div>
+                <div class="data-column">
+                    <h4>Response</h4>
+<pre>HttpCode: "ACCEPTED" or "INTERNAL_SERVER_ERROR"</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= VOTER SECTION ================= -->
+        <h3 class="section-title" id="voter-section">Voter APIs <span class="section-base">Base: /users</span></h3>
+
+        <div class="endpoint" id="voter-login">
+            <div class="endpoint-header">
+                <span class="badge post">POST</span>
+                <span class="path">/users/login/{epic_num}/{dob}</span>
+            </div>
+            <div class="endpoint-body">
+                <div class="data-column">
+                    <h4>Path Variables / Request</h4>
+<pre>epic_num: "string"
+dob: "string"</pre>
+                </div>
+                <div class="data-column">
+                    <h4>Response</h4>
+<pre>{
+  "string": "Login Succeed" // or "Login Failed"
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint" id="voter-logout">
+            <div class="endpoint-header">
+                <span class="badge post">POST</span>
+                <span class="path">/users/logout</span>
+            </div>
+            <div class="endpoint-body">
+                <div class="data-column">
+                    <h4>Request Data</h4>
+<pre>{
+  "epic_num": "will be fetched from session"
+}</pre>
+                </div>
+                <div class="data-column">
+                    <h4>Response</h4>
+<pre>{
+  "string": "Logout Succeed" // or "Logout failed"
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint" id="voter-profile">
+            <div class="endpoint-header">
+                <span class="badge get">GET</span>
+                <span class="path">/users/profile</span>
+            </div>
+            <div class="endpoint-body">
+                <div class="data-column">
+                    <h4>Request Data</h4>
+<pre>{
+  "epic_num": "id will be fetched from session"
+}</pre>
+                </div>
+                <div class="data-column">
+                    <h4>Response</h4>
+<pre>{
+  "epic_num": "STRING",
+  "name": "STRING",
+  "dob": "STRING",
+  "phone_number": "STRING",
+  "address": "STRING",
+  "constituency_name": "STRING"
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint" id="voter-profile-ph">
+            <div class="endpoint-header">
+                <span class="badge get">GET</span>
+                <span class="path">/users/profile/ph/{ph_no}</span>
+            </div>
+            <div class="endpoint-body">
+                <div class="data-column">
+                    <h4>Path Variables</h4>
+<pre>ph_no: "string"</pre>
+                </div>
+                <div class="data-column">
+                    <h4>Response</h4>
+<pre>{
+  "epic_num": "STRING",
+  "name": "STRING",
+  "dob": "STRING",
+  "phone_number": "STRING",
+  "address": "STRING",
+  "constituency_name": "STRING"
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint" id="voter-register">
+            <div class="endpoint-header">
+                <span class="badge post">POST</span>
+                <span class="path">/users/register</span>
+            </div>
+            <div class="endpoint-body">
+                <div class="data-column">
+                    <h4>Request Body</h4>
+<pre>{
+  "epic_num": "STRING",
+  "name": "STRING",
+  "dob": "STRING",
+  "phone_number": "STRING",
+  "address": "STRING",
+  "constituency_name": "STRING"
+}</pre>
+                </div>
+                <div class="data-column">
+                    <h4>Response</h4>
+<pre>{
+  "epic_num": "STRING",
+  "name": "STRING",
+  "dob": "STRING",
+  "phone_number": "STRING",
+  "address": "STRING",
+  "constituency_name": "STRING"
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint" id="voter-election">
+            <div class="endpoint-header">
+                <span class="badge get">GET</span>
+                <span class="path">/users/election-details/{election_id}</span>
+            </div>
+            <div class="endpoint-body">
+                <div class="data-column">
+                    <h4>Path Variables</h4>
+<pre>election_id: "string"</pre>
+                </div>
+                <div class="data-column">
+                    <h4>Response</h4>
+<pre>{
+  "election_id": "string",
+  "type": "string",
+  "start_date": "DATE",
+  "end_date": "DATE",
+  "status": "string",
+  "created_at": "DATE"
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint" id="voter-cand-list">
+            <div class="endpoint-header">
+                <span class="badge get">GET</span>
+                <span class="path">/users/candidate-list</span>
+            </div>
+            <div class="endpoint-body">
+                <div class="data-column">
+                    <h4>Request Data</h4>
+<pre>{
+  "constituency_id": "fetched from session"
+}</pre>
+                </div>
+                <div class="data-column">
+                    <h4>Response</h4>
+<pre>[
+  {
+    "cand_id": "string",
+    "cand_name": "string",
+    "cand_address": "string",
+    "cand_phone": "string",
+    "cand_dob": "string",
+    "party_name": "string",
+    "constituency_id": "string",
+    "constituency_name": "string",
+    "election_type": "string",
+    "election_date": "string"
+  }
+]</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint" id="voter-phone">
+            <div class="endpoint-header">
+                <span class="badge get">GET</span>
+                <span class="path">/users/phone-number</span>
+            </div>
+            <div class="endpoint-body">
+                <div class="data-column">
+                    <h4>Request Data</h4>
+<pre>{
+  "epic_num": "string (from session)"
+}</pre>
+                </div>
+                <div class="data-column">
+                    <h4>Response</h4>
+<pre>{
+  "string": "phone-number"
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="dev-notice">
+            <strong>🚧 UNDER DEVELOPMENT:</strong> The following Voter endpoints are currently in the development process:
+            <ul>
+                <li><span style="font-family: monospace;">POST /users/cast-vote</span></li>
+                <li><span style="font-family: monospace;">GET /users/history</span></li>
+                <li><span style="font-family: monospace;">GET /users/result</span></li>
+            </ul>
+        </div>
+
+        <!-- ================= ELECTION SECTION ================= -->
+        <h3 class="section-title" id="election-section">Election APIs <span class="section-base">Base: /election</span></h3>
+
+        <div class="endpoint" id="election-create">
+            <div class="endpoint-header">
+                <span class="badge post">POST</span>
+                <span class="path">/election/create</span>
+            </div>
+            <div class="endpoint-body">
+                <div class="data-column">
+                    <h4>Request Body</h4>
+<pre>{
+  "type": "NATIONAL_LEVEL | STATE_LEVEL | LOCAL_LEVEL",
+  "start_date": "DATE(YYYY-DD-MM)",
+  "end_date": "DATE(YYYY-DD-MM)"
+}</pre>
+                </div>
+                <div class="data-column">
+                    <h4>Response</h4>
+<pre>{
+  "election_id": "string"
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint" id="election-modify">
+            <div class="endpoint-header">
+                <span class="badge put">PUT</span>
+                <span class="path">/election/modify</span>
+            </div>
+            <div class="endpoint-body">
+                <div class="data-column">
+                    <h4>Request Body</h4>
+<pre>{
+  "elec_id": "string",
+  "status": "NOT_STARTED | IN_PROGRESS | DATE_PUBLISHED | ON_GOING | CLOSED | RESULT_PUBLISHED"
+}</pre>
+                </div>
+                <div class="data-column">
+                    <h4>Response</h4>
+<pre>{
+  "string": "Modified The Election Status To : {status}" // or "Modification Failed"
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint" id="election-view">
+            <div class="endpoint-header">
+                <span class="badge get">GET</span>
+                <span class="path">/election/view/{elec_id}</span>
+            </div>
+            <div class="endpoint-body">
+                <div class="data-column">
+                    <h4>Path Variables</h4>
+<pre>elec_id: "string"</pre>
+                </div>
+                <div class="data-column">
+                    <h4>Response</h4>
+<pre>{
+  "election_id": "string",
+  "type": "string",
+  "start_date": "DATE",
+  "end_date": "DATE",
+  "status": "string",
+  "created_at": "DATE"
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PARTY SECTION ================= -->
+        <h3 class="section-title" id="party-section">Party APIs <span class="section-base">Base: /party</span></h3>
+
+        <div class="endpoint" id="party-add">
+            <div class="endpoint-header">
+                <span class="badge post">POST</span>
+                <span class="path">/party/add</span>
+            </div>
+            <div class="endpoint-body">
+                <div class="data-column">
+                    <h4>Request Body</h4>
+<pre>{
+  "party_name": "string"
+}</pre>
+                </div>
+                <div class="data-column">
+                    <h4>Response</h4>
+<pre>{
+  "party_id": "string"
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint" id="party-view">
+            <div class="endpoint-header">
+                <span class="badge post">POST</span>
+                <span class="path">/party/view/{party_id}</span>
+            </div>
+            <div class="endpoint-body">
+                <div class="data-column">
+                    <h4>Path Variables</h4>
+<pre>party_id: "string"</pre>
+                </div>
+                <div class="data-column">
+                    <h4>Response</h4>
+<pre>{
+  "party_id": "string",
+  "party_name": "string"
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint" id="party-update">
+            <div class="endpoint-header">
+                <span class="badge post">POST</span>
+                <span class="path">/party/update</span>
+            </div>
+            <div class="endpoint-body">
+                <div class="data-column">
+                    <h4>Request Body</h4>
+<pre>{
+  "party_id": "string",
+  "party_name": "string"
+}</pre>
+                </div>
+                <div class="data-column">
+                    <h4>Response</h4>
+<pre>{
+  "string": "Party updated successfully"
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint" id="party-delete">
+            <div class="endpoint-header">
+                <span class="badge delete">DELETE</span>
+                <span class="path">/party/delete/{party_id}</span>
+            </div>
+            <div class="endpoint-body">
+                <div class="data-column">
+                    <h4>Path Variables</h4>
+<pre>party_id: "string"</pre>
+                </div>
+                <div class="data-column">
+                    <h4>Response</h4>
+<pre>{
+  "string": "Party deleted successfully"
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= CANDIDATE SECTION ================= -->
+        <h3 class="section-title" id="candidate-section">Candidate APIs <span class="section-base">Base: /candidate</span></h3>
+
+        <div class="endpoint" id="candidate-add">
+            <div class="endpoint-header">
+                <span class="badge post">POST</span>
+                <span class="path">/candidate/add</span>
+            </div>
+            <div class="endpoint-body">
+                <div class="data-column">
+                    <h4>Request Body</h4>
+<pre>{
+  "name": "string",
+  "address": "string",
+  "dob": "string",
+  "phn_num": "string",
+  "party_id": "string",
+  "cons_id": "string",
+  "elec_id": "string"
+}</pre>
+                </div>
+                <div class="data-column">
+                    <h4>Response</h4>
+<pre>{
+  "cons_id": "string"
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint" id="candidate-view">
+            <div class="endpoint-header">
+                <span class="badge get">GET</span>
+                <span class="path">/candidate/view/{cand_id}</span>
+            </div>
+            <div class="endpoint-body">
+                <div class="data-column">
+                    <h4>Path Variables</h4>
+<pre>cand_id: "string"</pre>
+                </div>
+                <div class="data-column">
+                    <h4>Response</h4>
+<pre>{
+  "cand_id": "string",
+  "cand_name": "string",
+  "cand_address": "string",
+  "cand_phone": "string",
+  "cand_dob": "string",
+  "party_name": "string",
+  "constituency_id": "string",
+  "constituency_name": "string",
+  "election_type": "string",
+  "election_date": "string"
+}</pre>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>
